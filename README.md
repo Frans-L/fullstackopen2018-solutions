@@ -1,2 +1,7 @@
-# fullstackopen2018-solutions
-Solution to open course of University of Helsinki: Full stack open 2018 Material here: https://fullstackopen.github.io/ to fullstackopen2018 
+# Full Stack Open 2018
+Solutions to Full stack open 2018. Solutions are in Finnish. The course is organized by Open University - University of Helsinki.
+
+The course material is located at: https://fullstackopen.github.io
+
+
+

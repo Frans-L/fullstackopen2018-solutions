@@ -1,0 +1,12 @@
+.notification {
+    background-color: rgb(74, 230, 74);
+    font-size: 18px;
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    color: green;
+    font-style: italic;
+}

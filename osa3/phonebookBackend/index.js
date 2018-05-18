@@ -11,6 +11,7 @@ const morganOutput = ':method :url :reqdata :status :res[content-length] - :resp
 
 //middlewares
 app.use(cors())
+app.use(express.static('build'))
 app.use(bodyParser.json())
 app.use(morgan(morganOutput))
 

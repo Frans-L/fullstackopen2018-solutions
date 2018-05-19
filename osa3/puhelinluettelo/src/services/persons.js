@@ -5,7 +5,6 @@ const baseUrl = '/api/persons'
 const getAll = () => {
     const request = axios.get(baseUrl)
     return request.then(r => {
-        console.log(r.data)
         return r.data
     })
 }

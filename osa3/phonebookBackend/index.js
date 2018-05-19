@@ -2,6 +2,7 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const PersonModel = require('./models/person')
 
 const app = express()
 
@@ -15,93 +16,98 @@ app.use(express.static('build'))
 app.use(bodyParser.json())
 app.use(morgan(morganOutput))
 
-//temp data
-let data = {
-    persons: [
-        {
-            name: "Arto Hellas",
-            number: "040-123456",
-            id: 1
-        },
-        {
-            name: "Martti Tienari",
-            number: "040-123456",
-            id: 2
-        },
-        {
-            name: "Arto Järvinen",
-            number: "040-123456",
-            id: 3
-        },
-        {
-            name: "Lea Kutvonen",
-            number: "040-123456",
-            id: 4
-        }
-    ]
-}
-
-//normal
-app.get('/', (req, res) => {
-    res.send('<h1>Hello World!</h1')
-})
 
 //info
 app.get('/info', (req, res) => {
     let time = new Date()
-    let amount = data.persons.length
-    res.send(
-        'Puhelinluettelossa on '
-        + amount + ' henkilön tiedot.' +
-        '<br><br>' + time
-    )
+
+    PersonModel
+        .count({})
+        .then((amount) => {
+            res.send(
+                'Puhelinluettelossa on '
+                + amount + ' henkilön tiedot.' +
+                '<br><br>' + time
+            )
+        })
+        .catch(error404)
 })
 
 //get all persons
 app.get('/api/persons', (req, res) => {
-    res.json(data.persons)
+    PersonModel
+        .find({}, { __v: 0 })
+        .then(p => {
+            res.json(p.map(PersonModel.format))
+        })
+        .catch(error404)
 })
 
 //get a person
 app.get('/api/persons/:id', (req, res) => {
     const id = req.params.id
-    const person = data.persons.find(p => p.id == id)
-    if (person) res.json(person)
-    else res.status(404).end()
+
+    PersonModel
+        .findById(id, { __v: 0 })
+        .then(p => {
+            res.json(PersonModel.format(p))
+        })
+        .catch(error404)
 })
 
 //delete a person
 app.delete('/api/persons/:id', (req, res) => {
     const id = req.params.id
-    const newPersons = data.persons.filter(p => p.id != id)
-    if (newPersons.length < data.persons.length) {
-        data = { ...data, persons: newPersons }
-        res.status(204).end()
-    }
-    else res.status(404).end()
+    PersonModel
+        .findByIdAndRemove(id)
+        .then(p => { //if found or not found
+            res.status(204).end()
+        })
+        .catch(error404)
+})
+
+//update a person
+app.put('/api/persons/:id', (req, res) => {
+    const id = req.params.id
+    const body = req.body
+
+    if (body.name === undefined || body.number === undefined) return res.status(400).json({ error: 'Content missing' })
+
+    PersonModel
+        .findByIdAndUpdate(id, body, { new: true })
+        .then((found) =>
+            res.json(PersonModel.format(found))
+        )
+        .catch(error404)
+
 })
 
 //add a person
 app.post('/api/persons', (req, res) => {
-    const id = generateID()
     const body = req.body
 
-    if (body.name !== undefined && body.number !== undefined) {
-        const person = { ...body, id: id }
-        if (data.persons.find(p => p.name === person.name) === undefined) {
-            data.persons = data.persons.concat(person)
-            res.json(person)
+    if (body.name === undefined || body.number === undefined) return res.status(400).json({ error: 'Content missing' })
 
-        } else res.status(400).json({ error: 'Person already exists' })
-    } else res.status(400).json({ error: 'Content missing' })
+    const person = new PersonModel({
+        name: body.name,
+        number: body.number
+    })
 
+    //if (data.persons.find(p => p.name === person.name) !== undefined)
+    //    return res.status(400).json({ error: 'Person already exists' })
+
+    person
+        .save()
+        .then(saved => {
+            res.json(PersonModel.format(saved))
+        })
+        .catch(error404)
 })
 
-//random id
-const generateID = () => (
-    Math.ceil(Math.random() * 1000000)
-)
-
+const error404 = (res) => {
+    console.log(error)
+    res.status(404).end()
+}
 //start listening
 const port = 3001
 app.listen(port, () => {

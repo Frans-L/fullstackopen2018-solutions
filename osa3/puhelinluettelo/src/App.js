@@ -107,7 +107,7 @@ class App extends React.Component {
         .then(data => {
           this.setState(
             {
-              persons: this.state.persons.filter(p => Number(p.id) !== Number(id)),
+              persons: this.state.persons.filter(p => p.id !== id),
               notification: 'Henkilö poistetiin onnistuneesti.'
             }
           )

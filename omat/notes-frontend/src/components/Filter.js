@@ -8,16 +8,16 @@ const Filter = ({
   select, input
 }) => {
 
-  const options = Object.entries(columns).map(([k, t]) => ({ key: k, text: t, value: k }))
+  const options = columns.map(col => ({ key: col.key, text: col.text, value: col.key }))
 
   return (
     <Form>
       <Form.Group>
         <Form.Input fluid label='Filter'
           value={input} onChange={inputOnChange}
-          placeholder={columns[select]} width={12} />
+          placeholder={select.text} width={12} />
         <Form.Select fluid label='by'
-          value={select} onChange={selectOnChange}
+          value={select.key} onChange={selectOnChange}
           options={options} width={4} />
       </Form.Group>
     </Form>
@@ -25,10 +25,10 @@ const Filter = ({
 }
 
 Filter.propTypes = {
-  columns: PropTypes.object.isRequired,
+  columns: PropTypes.array.isRequired,
   inputOnChange: PropTypes.func.isRequired,
   selectOnChange: PropTypes.func.isRequired,
-  select: PropTypes.string.isRequired,
+  select: PropTypes.object.isRequired,
   input: PropTypes.string.isRequired
 }
 

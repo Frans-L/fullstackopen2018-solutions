@@ -1,128 +1,140 @@
 import React, { Component } from 'react'
 
 //import './index.css'
-import noteService from './services/persons'
+import noteService from './services/enrolls'
 import Enrolls from './components/Enrolls'
 import NewEnroll from './components/NewEnroll'
-import Notification from './components/Notification'
 
 import './semantic/dist/semantic.min.css'
-import { Container, Divider } from 'semantic-ui-react'
+import { Container, Divider, Segment } from 'semantic-ui-react'
+
+
+const notificationTime = 4000
 
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      persons: [{ id: '1', name: 'Test', number: '0440' }],
-      newPerson: { id: '', name: '', number: '' },
-      columns: { name: 'Name', number: 'Number' },
-      notification: null
+      enrolls: [],
+
+      columns: [
+        { key: 'fName', text: 'First Name' },
+        { key: 'lName', text: 'Last Name' },
+        { key: 'number', text: 'Number' },
+        { key: 'email', text: 'Email' }
+      ],
+
+      inputs: [
+        [
+          { key: 'fName', text: 'First Name', type: 'Input' },
+          { key: 'lName', text: 'Last Name', type: 'Input' },
+        ],
+        [{ key: 'number', text: 'Phone Number', placeholder: '+358 40 1234567', type: 'Input' }],
+        [{ key: 'email', text: 'Email', placeholder: 'example@mail.com', type: 'Input' }],
+        [{ key: 'terms', text: 'I agree to the Terms And Conditions', type: 'Checkbox', mustBe: true }]
+      ],
+
+      newEnroll: {},
+
+      notificationShow: false,
+      notification: {},
+
+      inputError: false
+
     }
   }
 
   //loads data
-  /*
   componentDidMount() {
     noteService.getAll()
-      .then(persons => {
-        this.setState({ persons })
+      .then(enrolls => {
+        this.setState({
+          enrolls: enrolls,
+        })
       })
   }
-  */
 
-  //adds new person
-  newPerson = (event) => {
+  //adds new enroll
+  newEnroll = (event) => {
     event.preventDefault()
 
-    const person = {
-      name: this.state.newPerson.name,
-      number: this.state.newPerson.number
-    }
+    const enroll = {}
+    let inputErrors = false
 
-    if (!this.state.persons.map(p => p.name).includes(this.state.newPerson.name)) {
-      //adds new person
-      noteService.create(person)
-        .then(person => {
+    var inputs = [].concat.apply([], this.state.inputs)
+
+    inputs.forEach(c => {
+      const value = this.state.newEnroll[c.key]
+      if (value === undefined || value === '' || (c.mustBe && c.mustBe !== value)) inputErrors = true
+      else enroll[c.key] = value
+    })
+
+    if (!inputErrors) { //data is valid
+      noteService.create(enroll)
+        .then(enroll => {
           this.setState({
-            persons: this.state.persons.concat(person),
-            newPerson: { name: '', number: '' },
-            notification: 'Henkilö lisättiin onnistuneesti.'
+            enrolls: this.state.enrolls.concat(enroll),
+            newEnroll: {},
+            inputError: false
           })
-
-          //animation 
-          setTimeout(() => {
-            this.setState({ notification: null })
-          }, 2000)
-
+          this.showNotification('positive', 'Success', 'The check-in has been saved succesfully.')
         })
 
-    } else {
-      //updates old number to new one
-      if (window.confirm('Päivitetäänkö ' + person.name + '?')) {
-        const i = this.state.persons.map(p => p.name).indexOf(person.name)
-        const updatedPersons = [...this.state.persons]
-        updatedPersons[i].number = person.number
-        noteService.update(updatedPersons[i])
-          .then(() => {
-            this.setState({
-              persons: updatedPersons,
-              notification: 'Henkilö päivitettiin onnistuneesti.'
-            })
-
-            //animation 
-            setTimeout(() => {
-              this.setState({ notification: null })
-            }, 2000)
-          })
-          .catch(() => {
-            alert('Henkilöä ei ole enää olemassa!')
-            noteService.getAll()
-              .then(persons => {
-                this.setState({ persons })
-              })
-          })
-      }
+    } else { //errors in input
+      this.setState({ inputError: true })
+      this.showNotification('negative', 'Failed', 'Please, fill every input field.')
     }
-
   }
 
   //updates changed data
-  newPersonChange = (event) => {
-    let person = { ...this.state.newPerson }
-    person[event.target.name] = event.target.value
-    this.setState({ newPerson: person })
+  newPersonChange = (key, value) => {
+    let enroll = { ...this.state.newEnroll }
+    enroll[key] = value
+    this.setState({ newEnroll: enroll })
   }
 
-  //deletes a person
-  deletePerson = (event) => {
-    if (window.confirm('Poistetaanko ' + event.target.name + '?')) {
-      const id = event.target.id
-      noteService.remove(id)
-        .then(() => {
-          this.setState(
-            {
-              persons: this.state.persons.filter(p => p.id !== id),
-              notification: 'Henkilö poistetiin onnistuneesti.'
-            }
-          )
-
-          //animation 
-          setTimeout(() => {
-            this.setState({ notification: null })
-          }, 2000)
+  //deletes a enroll
+  deletePerson = (event, id) => {
+    noteService.remove(id)
+      .then(() => {
+        this.setState({
+          enrolls: this.state.enrolls.filter(p => p.id !== id),
+          inputError: false
         })
-    }
+        this.showNotification('positive', 'Success', 'The check-in has been removed succesfully.')
+      })
   }
 
+  showNotification = (type, header, text) => {
+    this.setState({
+      notification: { type: type, header: header, text: text },
+      notificationShow: true
+    })
+
+    //animation 
+    setTimeout(() => {
+      this.setState({ notificationShow: false })
+    }, notificationTime)
+  }
 
   //renders everything
   render() {
     return (
       <Container>
-        <Notification message={this.state.notification} />
-        <NewEnroll person={this.state.newPerson} submit={this.newPerson} change={this.newPersonChange} />
+        <Segment>
+          <NewEnroll
+            newEnroll={this.state.newEnroll} submit={this.newEnroll}
+            change={this.newPersonChange} inputs={this.state.inputs}
+            notification={this.state.notification}
+            notificationShow={this.state.notificationShow}
+            inputError={this.state.inputError} />
+        </Segment>
         <Divider hidden />
-        <Enrolls columns={this.state.columns} data={this.state.persons} deleteAction={this.deletePerson} />
+        <Segment>
+          <Enrolls
+            columns={this.state.columns} data={this.state.enrolls}
+            deleteAction={this.deletePerson} />
+        </Segment>
       </Container>
     )
   }

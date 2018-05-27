@@ -5,3 +5,7 @@
 .ui.container {
   margin-top: 2em;
 }
+
+.own-hidden {
+  visibility:hidden;
+}

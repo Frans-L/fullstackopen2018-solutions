@@ -205,3 +205,6 @@ body .ui.inverted::-webkit-scrollbar-thumb:hover {
 .ui.container {
   margin-top: 2em;
 }
+.own-hidden {
+  visibility: hidden;
+}

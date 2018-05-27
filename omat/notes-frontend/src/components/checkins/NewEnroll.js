@@ -20,7 +20,7 @@ const NewNumberForm = ({
         }
 
         <Divider hidden />
-        <Form.Button type="submit">Check in</Form.Button>
+        <Form.Button type="submit" primary>Check in</Form.Button>
         <Notification notification={notification} notificationShow={notificationShow} />
       </Form>
     </div>
@@ -53,7 +53,9 @@ const FormGroup = ({ formGroup, newEnroll, change, inputError }) => (
             return <FormInput key={form.key} form={form} newEnroll={newEnroll} change={change} inputError={inputError} />
           case 'Checkbox':
             return <Checkbox key={form.key} form={form} newEnroll={newEnroll} change={change} inputError={inputError} />
-          default: console.error('Invalid type:', form.type)
+          default: 
+            console.error('Invalid type:', form.type)
+            return null
         }
       })
     }

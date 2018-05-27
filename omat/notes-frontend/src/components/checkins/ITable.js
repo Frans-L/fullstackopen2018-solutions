@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
+import './ITable.css'
 import { Table, Icon } from 'semantic-ui-react'
 
 class ITable extends Component {
